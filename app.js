@@ -70,7 +70,47 @@ function validateMovie(body, partial = false) {
 
 // GET /movies
 app.get("/movies", (req, res) => {
-  res.json(movies);
+  let result = [...movies];
+  const { genre, minYear, sort } = req.query;
+
+  // filter by genre
+  if (genre) {
+    result = result.filter(
+      (m) => m.genre && m.genre.toLowerCase() === genre.toLowerCase(),
+    );
+  }
+
+  // filter by minyear
+  if (minYear !== undefined) {
+    const parsedMinYear = parseInt(minYear, 10);
+    if (isNaN(parsedMinYear)) {
+      return res.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "minyear must be a valid number",
+        },
+      });
+    }
+    result = result.filter((m) => m.year >= parsedMinYear);
+  }
+
+  // sorting
+  if (sort) {
+    if (sort === "year") {
+      result.sort((a, b) => a.year - b.year);
+    } else if (sort === "title") {
+      result.sort((a, b) => a.title.localeCompare(b.title));
+    } else {
+      return res.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "unsupported parameter for sort",
+        },
+      });
+    }
+  }
+
+  res.json(result);
 });
 
 // GET /movies/:id
