@@ -1,7 +1,9 @@
 const express = require("express");
+const morgan = require("morgan");
 const app = express();
 
 app.use(express.json());
+app.use(morgan("dev"));
 
 // starting data
 let movies = [
@@ -247,6 +249,28 @@ app.delete("/movies/:id", (req, res) => {
 
   movies.splice(movieIndex, 1);
   res.status(204).send();
+});
+
+// unknown route middleware
+app.use((req, res) => {
+  res.status(404).json({
+    error: {
+      code: "ROUTE_NOT_FOUND",
+      message: "the requested route does not exist",
+    },
+  });
+});
+
+// error-handling middleware
+app.use((err, req, res, next) => {
+  console.error(err);
+
+  res.status(500).json({
+    error: {
+      code: "INTERNAL_SERVER_ERROR",
+      message: "an unexpected server error occurred",
+    },
+  });
 });
 
 // running the server on port 3000
